@@ -17,9 +17,6 @@ import java.util.List;
 
 public class App {
     public static void main(String[] args) throws IOException {
-        System.err.println(new CatParser().parse("((S[b]\\NP)/PP)/NP"));
-        System.exit(0);
-
         ObjectMapper mapper = new ObjectMapper();
         WordWithSupertags[][] allTaggedSentences = mapper.readValue(new File("supertags.json"), WordWithSupertags[][].class);
 

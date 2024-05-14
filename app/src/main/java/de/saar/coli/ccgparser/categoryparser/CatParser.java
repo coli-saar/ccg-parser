@@ -5,6 +5,8 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 public class CatParser {
+    public static final CatParser CATEGORY_PARSER = new CatParser();
+
     public Category parse(String cat) {
         ANTLRInputStream inputStream = new ANTLRInputStream(cat);
         CategoryLexer lexer = new CategoryLexer(inputStream);
