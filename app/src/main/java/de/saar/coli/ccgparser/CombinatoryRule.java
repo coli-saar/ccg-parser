@@ -2,7 +2,8 @@ package de.saar.coli.ccgparser;
 
 public enum CombinatoryRule {
     FORWARD_APPLICATION(">", true),
-    BACKWARD_APPLICATION("<", false)
+    BACKWARD_APPLICATION("<", false),
+    TYPECHANGE("TC", false)
     ;
 
     private String symbol;

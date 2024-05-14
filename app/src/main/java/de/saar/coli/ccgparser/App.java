@@ -18,7 +18,7 @@ import java.util.List;
 public class App {
     public static void main(String[] args) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        WordWithSupertags[][] allTaggedSentences = mapper.readValue(new File("supertags.json"), WordWithSupertags[][].class);
+        WordWithSupertags[][] allTaggedSentences = mapper.readValue(new File("ccg-supertagger/supertags.json"), WordWithSupertags[][].class);
 
         // ASSUMPTION - supertags for each word are presented in order of descending score (best first)
         for( WordWithSupertags[] sentence : allTaggedSentences ) {
@@ -30,7 +30,9 @@ public class App {
             }
         }
 
-        Parser parser = new Parser(allTaggedSentences[0]);
+        UnaryRules unaryRules = UnaryRules.load(new File("unary_rules.txt"));
+
+        Parser parser = new Parser(allTaggedSentences[0], unaryRules);
         Tree<String> parseTree = parser.parse();
         System.out.println(parseTree);
     }

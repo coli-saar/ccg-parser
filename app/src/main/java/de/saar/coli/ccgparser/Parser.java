@@ -9,12 +9,14 @@ public class Parser {
     private Chart chart;
     private OutsideEstimator estimator;
     private int n;
+    private UnaryRules unaryRules;
 
-    public Parser(WordWithSupertags[] sentence) {
+    public Parser(WordWithSupertags[] sentence, UnaryRules unaryRules) {
         n = sentence.length;
         estimator = new OutsideEstimator(sentence);
         agenda = new Agenda(estimator);
         chart = new Chart(sentence.length);
+        this.unaryRules = unaryRules;
 
         // fill agenda with supertag items
         int i = 0;
@@ -111,6 +113,13 @@ public class Parser {
                 if( partnerCat.getType() == Category.CategoryType.BACKWARD && partnerCat.getArgument().equals(item.getCategory())) {
                     create(item.getStart(), partner.getEnd(), partnerCat.getFunctor(), partner, item, CombinatoryRule.BACKWARD_APPLICATION);
                 }
+            }
+
+            // process unary type-changing rules
+            for( Category changedCategory : unaryRules.get(item.getCategory())) {
+                Item modified = new Item(item.getStart(), item.getEnd(), changedCategory, item.getScore());
+                modified.addBackpointer(new Backpointer(List.of(item), CombinatoryRule.TYPECHANGE));
+                add(modified);
             }
         }
 
