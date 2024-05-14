@@ -31,6 +31,10 @@ public class Agenda {
         return agenda.poll();
     }
 
+    public boolean isEmpty() {
+        return agenda.isEmpty();
+    }
+
     // This is super slow and should be avoided
     @Override
     public String toString() {

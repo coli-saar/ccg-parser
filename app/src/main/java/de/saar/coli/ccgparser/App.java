@@ -24,5 +24,6 @@ public class App {
         }
 
         Parser parser = new Parser(allTaggedSentences[0]);
+        parser.parse();
     }
 }
