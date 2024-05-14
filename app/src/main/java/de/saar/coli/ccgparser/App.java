@@ -29,5 +29,6 @@ public class App {
         Parser parser = new Parser(allTaggedSentences[0], unaryRules);
         Tree<String> parseTree = parser.parse();
         System.err.println(parseTree);
+        parseTree.draw().setVisible(true);
     }
 }

@@ -10,6 +10,7 @@ public class Parser {
     private OutsideEstimator estimator;
     private int n;
     private UnaryRules unaryRules;
+    private WordWithSupertags[] sentence;
 
     public Parser(WordWithSupertags[] sentence, UnaryRules unaryRules) {
         n = sentence.length;
@@ -17,6 +18,7 @@ public class Parser {
         agenda = new Agenda(estimator);
         chart = new Chart(sentence.length);
         this.unaryRules = unaryRules;
+        this.sentence = sentence;
 
         // fill agenda with supertag items
         int i = 0;
@@ -27,8 +29,6 @@ public class Parser {
             }
             i++;
         }
-
-//        System.out.println(agenda);
     }
 
     private void add(Item item) {
@@ -55,12 +55,12 @@ public class Parser {
 
     private Tree<String> makeParseTree(Item item) {
         if( item.getBackpointers().isEmpty() ) {
-            return Tree.create(item.getCategory().toString());
+            return Tree.create(item.getCategory().toString(), Tree.create(sentence[item.getStart()].word));
         } else {
             Backpointer bp = item.getBackpointers().get(0);
             if( bp.getPieces().size() == 1 ) {
                 // type-changing rule
-                return Tree.create(bp.getCombinatoryRule().getSymbol(), makeParseTree(bp.getPieces().get(0)));
+                return Tree.create(bp.getCombinatoryRule().getSymbol() + ":" + bp.getAnnotation(), makeParseTree(bp.getPieces().get(0)));
             } else if( bp.getCombinatoryRule().isForward() ) {
                 // forward
                 return Tree.create(bp.getCombinatoryRule().getSymbol(), makeParseTree(bp.getPieces().get(0)), makeParseTree(bp.getPieces().get(1)));
@@ -80,12 +80,6 @@ public class Parser {
             Item foundGoalItem = null;
 
             System.err.printf("Dequeued: %s\n", item.toString(estimator));
-
-//            // check for goal item → I now do this at enqueue time
-//            if( isGoalItem(item) ) {
-//                System.err.println("** FOUND GOAL ITEM **");
-//                return makeParseTree(item);
-//            }
 
             // TODO - implement combinatory rules other than application
 
@@ -130,7 +124,9 @@ public class Parser {
             // process unary type-changing rules
             for( Category changedCategory : unaryRules.get(item.getCategory())) {
                 Item modified = new Item(item.getStart(), item.getEnd(), changedCategory, item.getScore());
-                modified.addBackpointer(new Backpointer(List.of(item), CombinatoryRule.TYPECHANGE));
+                Backpointer bp = new Backpointer(List.of(item), CombinatoryRule.TYPECHANGE);
+                bp.setAnnotation(changedCategory.toString());
+                modified.addBackpointer(bp);
                 add(modified);
                 foundGoalItem = isGoalItem(modified) ? modified : foundGoalItem;
             }
