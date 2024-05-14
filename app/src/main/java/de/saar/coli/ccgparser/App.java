@@ -4,16 +4,10 @@
 package de.saar.coli.ccgparser;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.saar.coli.ccgparser.categoryparser.CatParser;
-import de.saar.coli.ccgparser.categoryparser.CategoryLexer;
-import de.saar.coli.ccgparser.categoryparser.CategoryParser;
 import de.up.ling.tree.Tree;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 public class App {
     public static void main(String[] args) throws IOException {
@@ -32,7 +26,7 @@ public class App {
 
         UnaryRules unaryRules = UnaryRules.load(new File("unary_rules.txt"));
 
-        Parser parser = new Parser(allTaggedSentences[1], unaryRules);
+        Parser parser = new Parser(allTaggedSentences[0], unaryRules);
         Tree<String> parseTree = parser.parse();
         System.err.println(parseTree);
     }

@@ -41,10 +41,11 @@ public class Parser {
         }
     }
 
-    private void create(int start, int end, Category category, Item functor, Item argument, CombinatoryRule combinatoryRule) {
+    private Item create(int start, int end, Category category, Item functor, Item argument, CombinatoryRule combinatoryRule) {
         Item resultItem = new Item(start, end, category, functor.getScore() + argument.getScore());
         resultItem.addBackpointer(new Backpointer(List.of(functor, argument), combinatoryRule));
         add(resultItem);
+        return resultItem;
     }
 
     private boolean isGoalItem(Item item) {
@@ -76,14 +77,15 @@ public class Parser {
             System.err.println(agenda);
 
             Item item = agenda.dequeue();
+            Item foundGoalItem = null;
 
             System.err.printf("Dequeued: %s\n", item.toString(estimator));
 
-            // check for goal item
-            if( isGoalItem(item) ) {
-                System.err.println("** FOUND GOAL ITEM **");
-                return makeParseTree(item);
-            }
+//            // check for goal item → I now do this at enqueue time
+//            if( isGoalItem(item) ) {
+//                System.err.println("** FOUND GOAL ITEM **");
+//                return makeParseTree(item);
+//            }
 
             // TODO - implement combinatory rules other than application
 
@@ -92,7 +94,8 @@ public class Parser {
                 case FORWARD:
                     for( Item partner : chart.getItemsWithStart(item.getEnd())) {
                         if( item.getCategory().getArgument().equals(partner.getCategory())) {
-                            create(item.getStart(), partner.getEnd(), item.getCategory().getFunctor(), item, partner, CombinatoryRule.FORWARD_APPLICATION);
+                            Item newItem = create(item.getStart(), partner.getEnd(), item.getCategory().getFunctor(), item, partner, CombinatoryRule.FORWARD_APPLICATION);
+                            foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
                         }
                     }
                     break;
@@ -100,7 +103,8 @@ public class Parser {
                 case BACKWARD:
                     for( Item partner : chart.getItemsWithEnd(item.getStart())) {
                         if( item.getCategory().getArgument().equals(partner.getCategory())) {
-                            create(partner.getStart(), item.getEnd(), item.getCategory().getFunctor(), item, partner, CombinatoryRule.BACKWARD_APPLICATION);
+                            Item newItem = create(partner.getStart(), item.getEnd(), item.getCategory().getFunctor(), item, partner, CombinatoryRule.BACKWARD_APPLICATION);
+                            foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
                         }
                     }
                     break;
@@ -110,14 +114,16 @@ public class Parser {
             for( Item partner : chart.getItemsWithEnd(item.getStart())) {
                 Category partnerCat = partner.getCategory();
                 if( partnerCat.getType() == Category.CategoryType.FORWARD && partnerCat.getArgument().equals(item.getCategory())) {
-                    create(partner.getStart(), item.getEnd(), partnerCat.getFunctor(), partner, item, CombinatoryRule.FORWARD_APPLICATION);
+                    Item newItem = create(partner.getStart(), item.getEnd(), partnerCat.getFunctor(), partner, item, CombinatoryRule.FORWARD_APPLICATION);
+                    foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
                 }
             }
 
             for( Item partner : chart.getItemsWithStart(item.getEnd())) {
                 Category partnerCat = partner.getCategory();
                 if( partnerCat.getType() == Category.CategoryType.BACKWARD && partnerCat.getArgument().equals(item.getCategory())) {
-                    create(item.getStart(), partner.getEnd(), partnerCat.getFunctor(), partner, item, CombinatoryRule.BACKWARD_APPLICATION);
+                    Item newItem = create(item.getStart(), partner.getEnd(), partnerCat.getFunctor(), partner, item, CombinatoryRule.BACKWARD_APPLICATION);
+                    foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
                 }
             }
 
@@ -126,6 +132,12 @@ public class Parser {
                 Item modified = new Item(item.getStart(), item.getEnd(), changedCategory, item.getScore());
                 modified.addBackpointer(new Backpointer(List.of(item), CombinatoryRule.TYPECHANGE));
                 add(modified);
+                foundGoalItem = isGoalItem(modified) ? modified : foundGoalItem;
+            }
+
+            if( foundGoalItem != null ) {
+                System.err.println("** ENQUEUED GOAL ITEM **");
+                return makeParseTree(foundGoalItem);
             }
         }
 
