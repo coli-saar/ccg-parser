@@ -24,8 +24,5 @@ public class App {
         }
 
         Parser parser = new Parser(allTaggedSentences[0]);
-
-
-        System.out.println(allTaggedSentences);
     }
 }

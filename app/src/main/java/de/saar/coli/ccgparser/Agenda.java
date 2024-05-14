@@ -1,6 +1,8 @@
 package de.saar.coli.ccgparser;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.PriorityQueue;
 
 public class Agenda {
@@ -10,7 +12,8 @@ public class Agenda {
     private class AgendaComparator implements Comparator<Item> {
         @Override
         public int compare(Item o1, Item o2) {
-            return Double.compare(o1.getScore() + estimator.estimate(o1), o2.getScore() + estimator.estimate(o2));
+            // sort in descending order
+            return - Double.compare(o1.getScore() + estimator.estimate(o1), o2.getScore() + estimator.estimate(o2));
         }
     }
 
@@ -26,5 +29,22 @@ public class Agenda {
 
     public Item dequeue() {
         return agenda.poll();
+    }
+
+    // This is super slow and should be avoided
+    @Override
+    public String toString() {
+        // move items, in order, from agenda to list
+        List<Item> items = new ArrayList<>();
+        while (!agenda.isEmpty()) {
+            items.add(agenda.poll());
+        }
+
+        // copy them back into the agenda
+        for( Item item : items ) {
+            agenda.offer(item);
+        }
+
+        return items.toString();
     }
 }

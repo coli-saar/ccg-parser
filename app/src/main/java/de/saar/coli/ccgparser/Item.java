@@ -36,4 +36,9 @@ public class Item {
     public double getScore() {
         return score;
     }
+
+    @Override
+    public String toString() {
+        return String.format("[%d-%d %s :%d]", start, end, category.toString(), (int) score);
+    }
 }
