@@ -23,6 +23,5 @@ public class TestCategory {
         Category category = Category.createBackward(Category.createAtomic("S"), Category.createAtomic("NP"));
         assertEquals(Category.CategoryType.BACKWARD, category.getType());
         assertEquals("(S\\NP)", category.toString());
-        System.out.println(category);
     }
 }

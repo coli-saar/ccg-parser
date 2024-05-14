@@ -4,7 +4,12 @@
 package de.saar.coli.ccgparser;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.saar.coli.ccgparser.categoryparser.CatParser;
+import de.saar.coli.ccgparser.categoryparser.CategoryLexer;
+import de.saar.coli.ccgparser.categoryparser.CategoryParser;
 import de.up.ling.tree.Tree;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +17,9 @@ import java.util.List;
 
 public class App {
     public static void main(String[] args) throws IOException {
+        System.err.println(new CatParser().parse("((S[b]\\NP)/PP)/NP"));
+        System.exit(0);
+
         ObjectMapper mapper = new ObjectMapper();
         WordWithSupertags[][] allTaggedSentences = mapper.readValue(new File("supertags.json"), WordWithSupertags[][].class);
 
