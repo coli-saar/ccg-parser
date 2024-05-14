@@ -7,7 +7,7 @@ import java.util.Objects;
 public class Item {
     private int start, end;
     private Category category;
-    private List<List<Item>> backpointers;
+    private List<Backpointer> backpointers;
     private double score;
 
     public Item(int start, int end, Category category, double score) {
@@ -30,8 +30,12 @@ public class Item {
         return category;
     }
 
-    public List<List<Item>> getBackpointers() {
+    public List<Backpointer> getBackpointers() {
         return backpointers;
+    }
+
+    public void addBackpointer(Backpointer backpointer) {
+        backpointers.add(backpointer);
     }
 
     public double getScore() {

@@ -1,5 +1,7 @@
 package de.saar.coli.ccgparser;
 
+import de.up.ling.tree.Tree;
+
 import java.util.List;
 
 public class Parser {
@@ -37,11 +39,30 @@ public class Parser {
         }
     }
 
+    private void create(int start, int end, Category category, Item functor, Item argument, CombinatoryRule combinatoryRule) {
+        Item resultItem = new Item(start, end, category, functor.getScore() + argument.getScore());
+        resultItem.addBackpointer(new Backpointer(List.of(functor, argument), combinatoryRule));
+        add(resultItem);
+    }
+
     private boolean isGoalItem(Item item) {
         return item.getStart() == 0 && item.getEnd() == n && "S".equals(item.getCategory().getAtomic());
     }
 
-    public void parse() {
+    private Tree<String> makeParseTree(Item item) {
+        if( item.getBackpointers().isEmpty() ) {
+            return Tree.create(item.getCategory().toString());
+        } else {
+            Backpointer bp = item.getBackpointers().get(0);
+            if( bp.getCombinatoryRule().isForward() ) {
+                return Tree.create(bp.getCombinatoryRule().getSymbol(), makeParseTree(bp.getPieces().get(0)), makeParseTree(bp.getPieces().get(1)));
+            } else {
+                return Tree.create(bp.getCombinatoryRule().getSymbol(), makeParseTree(bp.getPieces().get(1)), makeParseTree(bp.getPieces().get(0)));
+            }
+        }
+    }
+
+    public Tree<String> parse() {
         while( ! agenda.isEmpty() ) {
             System.err.println();
             System.err.println(agenda);
@@ -53,7 +74,7 @@ public class Parser {
             // check for goal item
             if( isGoalItem(item) ) {
                 System.err.println("** FOUND GOAL ITEM **");
-                return;
+                return makeParseTree(item);
             }
 
             // TODO - implement combinatory rules other than application
@@ -63,8 +84,7 @@ public class Parser {
                 case FORWARD:
                     for( Item partner : chart.getItemsWithStart(item.getEnd())) {
                         if( item.getCategory().getArgument().equals(partner.getCategory())) {
-                            Item resultItem = new Item(item.getStart(), partner.getEnd(), item.getCategory().getFunctor(), item.getScore() + partner.getScore());
-                            add(resultItem);
+                            create(item.getStart(), partner.getEnd(), item.getCategory().getFunctor(), item, partner, CombinatoryRule.FORWARD_APPLICATION);
                         }
                     }
                     break;
@@ -72,8 +92,7 @@ public class Parser {
                 case BACKWARD:
                     for( Item partner : chart.getItemsWithEnd(item.getStart())) {
                         if( item.getCategory().getArgument().equals(partner.getCategory())) {
-                            Item resultItem = new Item(partner.getStart(), item.getEnd(), item.getCategory().getFunctor(), item.getScore() + partner.getScore());
-                            add(resultItem);
+                            create(partner.getStart(), item.getEnd(), item.getCategory().getFunctor(), item, partner, CombinatoryRule.BACKWARD_APPLICATION);
                         }
                     }
                     break;
@@ -83,18 +102,18 @@ public class Parser {
             for( Item partner : chart.getItemsWithEnd(item.getStart())) {
                 Category partnerCat = partner.getCategory();
                 if( partnerCat.getType() == Category.CategoryType.FORWARD && partnerCat.getArgument().equals(item.getCategory())) {
-                    Item resultItem = new Item(partner.getStart(), item.getEnd(), partnerCat.getFunctor(), item.getScore() + partner.getScore());
-                    add(resultItem);
+                    create(partner.getStart(), item.getEnd(), partnerCat.getFunctor(), partner, item, CombinatoryRule.FORWARD_APPLICATION);
                 }
             }
 
             for( Item partner : chart.getItemsWithStart(item.getEnd())) {
                 Category partnerCat = partner.getCategory();
                 if( partnerCat.getType() == Category.CategoryType.BACKWARD && partnerCat.getArgument().equals(item.getCategory())) {
-                    Item resultItem = new Item(item.getStart(), partner.getEnd(), partnerCat.getFunctor(), item.getScore() + partner.getScore());
-                    add(resultItem);
+                    create(item.getStart(), partner.getEnd(), partnerCat.getFunctor(), partner, item, CombinatoryRule.BACKWARD_APPLICATION);
                 }
             }
         }
+
+        return null;
     }
 }

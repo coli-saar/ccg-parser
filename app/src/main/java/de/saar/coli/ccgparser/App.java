@@ -4,6 +4,7 @@
 package de.saar.coli.ccgparser;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.up.ling.tree.Tree;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +26,7 @@ public class App {
         }
 
         Parser parser = new Parser(allTaggedSentences[0]);
-        parser.parse();
+        Tree<String> parseTree = parser.parse();
+        System.out.println(parseTree);
     }
 }
