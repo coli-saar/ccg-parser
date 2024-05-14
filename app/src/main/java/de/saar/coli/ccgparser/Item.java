@@ -2,6 +2,7 @@ package de.saar.coli.ccgparser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Item {
     private int start, end;
@@ -37,8 +38,21 @@ public class Item {
         return score;
     }
 
+    public String toString(OutsideEstimator estimator) {
+        double estimate = estimator.estimate(this);
+        return String.format("[%d-%d %s :%d+%d=%d]", start, end, category.toString(), (int) score, (int) estimate, (int) (score + estimate));
+    }
+
     @Override
-    public String toString() {
-        return String.format("[%d-%d %s :%d]", start, end, category.toString(), (int) score);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Item item = (Item) o;
+        return start == item.start && end == item.end && Double.compare(score, item.score) == 0 && Objects.equals(category, item.category);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(start, end, category, score);
     }
 }

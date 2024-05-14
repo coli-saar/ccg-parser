@@ -1,5 +1,7 @@
 package de.saar.coli.ccgparser;
 
+import java.util.Objects;
+
 public class Category {
     public enum CategoryType {
         ATOMIC,
@@ -63,5 +65,18 @@ public class Category {
 
     public Category getArgument() {
         return argument;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Category category = (Category) o;
+        return type == category.type && Objects.equals(atomic, category.atomic) && Objects.equals(functor, category.functor) && Objects.equals(argument, category.argument);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, atomic, functor, argument);
     }
 }

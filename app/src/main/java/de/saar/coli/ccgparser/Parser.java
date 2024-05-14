@@ -5,11 +5,12 @@ import java.util.List;
 public class Parser {
     private Agenda agenda;
     private Chart chart;
+    private OutsideEstimator estimator;
     private int n;
 
     public Parser(WordWithSupertags[] sentence) {
         n = sentence.length;
-        OutsideEstimator estimator = new OutsideEstimator(sentence);
+        estimator = new OutsideEstimator(sentence);
         agenda = new Agenda(estimator);
         chart = new Chart(sentence.length);
 
@@ -27,9 +28,13 @@ public class Parser {
     }
 
     private void add(Item item) {
-        agenda.enqueue(item);
-        chart.add(item);
-        System.err.printf("Enqueued: %s\n", item);
+        if( chart.contains(item) ) {
+            System.err.printf("Already known: %s\n", item.toString(estimator));
+        } else {
+            agenda.enqueue(item);
+            chart.add(item);
+            System.err.printf("Enqueued: %s\n", item.toString(estimator));
+        }
     }
 
     private boolean isGoalItem(Item item) {
@@ -38,15 +43,20 @@ public class Parser {
 
     public void parse() {
         while( ! agenda.isEmpty() ) {
+            System.err.println();
+            System.err.println(agenda);
+
             Item item = agenda.dequeue();
 
-            System.err.printf("Dequeued: %s\n", item);
+            System.err.printf("Dequeued: %s\n", item.toString(estimator));
 
             // check for goal item
             if( isGoalItem(item) ) {
                 System.err.println("** FOUND GOAL ITEM **");
                 return;
             }
+
+            // TODO - implement combinatory rules other than application
 
             // item acts as functor
             switch( item.getCategory().getType() ) {

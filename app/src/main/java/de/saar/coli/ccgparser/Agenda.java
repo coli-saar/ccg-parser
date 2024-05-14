@@ -49,6 +49,12 @@ public class Agenda {
             agenda.offer(item);
         }
 
-        return items.toString();
+        StringBuffer buf = new StringBuffer();
+        for( Item item : items ) {
+            buf.append(item.toString(estimator));
+            buf.append("\n");
+        }
+
+        return buf.toString();
     }
 }

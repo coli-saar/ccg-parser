@@ -14,6 +14,7 @@ public class App {
         ObjectMapper mapper = new ObjectMapper();
         WordWithSupertags[][] allTaggedSentences = mapper.readValue(new File("supertags.json"), WordWithSupertags[][].class);
 
+        // ASSUMPTION - supertags for each word are presented in order of descending score (best first)
         for( WordWithSupertags[] sentence : allTaggedSentences ) {
             for( WordWithSupertags word : sentence ) {
                 int i = 0;

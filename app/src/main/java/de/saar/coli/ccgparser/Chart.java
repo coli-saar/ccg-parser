@@ -58,4 +58,8 @@ public class Chart {
         }
         return Iterables.concat(iterables);
     }
+
+    public boolean contains(Item item) {
+        return chart[item.getStart()][item.getEnd()].contains(item);
+    }
 }
