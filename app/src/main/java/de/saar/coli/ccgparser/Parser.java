@@ -48,7 +48,8 @@ public class Parser {
     }
 
     private boolean isGoalItem(Item item) {
-        return item.getStart() == 0 && item.getEnd() == n && "S".equals(item.getCategory().getAtomic());
+        String atomic = item.getCategory().getAtomic();
+        return item.getStart() == 0 && item.getEnd() == n && atomic != null && atomic.startsWith("S");
     }
 
     private Tree<String> makeParseTree(Item item) {
@@ -56,9 +57,14 @@ public class Parser {
             return Tree.create(item.getCategory().toString());
         } else {
             Backpointer bp = item.getBackpointers().get(0);
-            if( bp.getCombinatoryRule().isForward() ) {
+            if( bp.getPieces().size() == 1 ) {
+                // type-changing rule
+                return Tree.create(bp.getCombinatoryRule().getSymbol(), makeParseTree(bp.getPieces().get(0)));
+            } else if( bp.getCombinatoryRule().isForward() ) {
+                // forward
                 return Tree.create(bp.getCombinatoryRule().getSymbol(), makeParseTree(bp.getPieces().get(0)), makeParseTree(bp.getPieces().get(1)));
             } else {
+                // backward
                 return Tree.create(bp.getCombinatoryRule().getSymbol(), makeParseTree(bp.getPieces().get(1)), makeParseTree(bp.getPieces().get(0)));
             }
         }

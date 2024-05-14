@@ -32,8 +32,8 @@ public class App {
 
         UnaryRules unaryRules = UnaryRules.load(new File("unary_rules.txt"));
 
-        Parser parser = new Parser(allTaggedSentences[0], unaryRules);
+        Parser parser = new Parser(allTaggedSentences[1], unaryRules);
         Tree<String> parseTree = parser.parse();
-        System.out.println(parseTree);
+        System.err.println(parseTree);
     }
 }

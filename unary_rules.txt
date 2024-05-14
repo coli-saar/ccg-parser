@@ -8,23 +8,19 @@
 N       NP
 
 # Relativization, as in "the boy playing tennis"
-S[pss]\NP      NP\NP
-S[ng]\NP       NP\NP
-S[adj]\NP      NP\NP
-S[to]\NP       NP\NP
-S[to]\NP       N\N
-S[dcl]/NP       NP\NP
+S\NP      NP\NP
+S\NP       N\N
+S/NP       NP\NP
 
 # Rules that let verb-phrases modify sentences, as in "Born in Hawaii, Obama is the 44th president."
-S[pss]\NP      S/S
-S[ng]\NP       S/S
-S[to]\NP       S/S
-S[ng]\NP       S\S
+S\NP      S/S
+S\NP       S\S
 
-S[ng]\NP       NP
+S\NP       NP
 
 # Type raising
 NP      S[X]/(S[X]\NP)
 NP      (S[X]\NP)\((S[X]\NP)/NP)
 PP      (S[X]\NP)\((S[X]\NP)/PP)
+
 
