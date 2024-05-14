@@ -10,14 +10,22 @@ import java.io.IOException;
 import java.util.List;
 
 public class App {
-    public String getGreeting() {
-        return "Hello World!";
-    }
-
     public static void main(String[] args) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        List<List<WordWithSupertags>> value = mapper.readValue(new File("supertags.jsonnet"), List.class);
+        WordWithSupertags[][] allTaggedSentences = mapper.readValue(new File("supertags.json"), WordWithSupertags[][].class);
 
-        System.out.println(value);
+        for( WordWithSupertags[] sentence : allTaggedSentences ) {
+            for( WordWithSupertags word : sentence ) {
+                int i = 0;
+                for( SupertagWithScore tag : word.supertags ) {
+                    tag.setPositionInSupertagList(i++);
+                }
+            }
+        }
+
+        Parser parser = new Parser(allTaggedSentences[0]);
+
+
+        System.out.println(allTaggedSentences);
     }
 }
