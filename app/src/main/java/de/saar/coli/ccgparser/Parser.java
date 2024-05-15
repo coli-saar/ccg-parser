@@ -1,6 +1,20 @@
 package de.saar.coli.ccgparser;
 
 import de.up.ling.tree.Tree;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.ConsoleAppender;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import java.util.List;
 
@@ -11,6 +25,25 @@ public class Parser {
     private int n;
     private UnaryRules unaryRules;
     private WordWithSupertags[] sentence;
+    private static final Logger logger = LogManager.getLogger("Parser");
+
+    static {
+        // log only selected messages
+        Configurator.setLevel(logger.getName(), Level.TRACE);
+
+        // clean up the layout of the logger - the crucial part is the PatternLayout
+        LoggerContext context = (LoggerContext) LogManager.getContext(false);
+        Configuration config = context.getConfiguration();
+        PatternLayout layout = PatternLayout.newBuilder().withPattern("[P] %m\n").build();
+        ConsoleAppender appender = ConsoleAppender.newBuilder().setName("Clean").setLayout(layout).setTarget(ConsoleAppender.Target.SYSTEM_ERR).build();
+        appender.start();
+        LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
+        for (Appender oldAppender : loggerConfig.getAppenders().values()) {
+            loggerConfig.removeAppender(oldAppender.getName());
+        }
+        loggerConfig.addAppender(appender, null, null);
+        context.updateLoggers();
+    }
 
     public Parser(WordWithSupertags[] sentence, UnaryRules unaryRules) {
         n = sentence.length;
@@ -29,15 +62,17 @@ public class Parser {
             }
             i++;
         }
+
+
     }
 
     private void add(Item item) {
         if( chart.contains(item) ) {
-            System.err.printf("Already known: %s\n", item.toString(estimator));
+            logger.debug("Already known: {}", () -> item.toString(estimator));
         } else {
             agenda.enqueue(item);
             chart.add(item);
-            System.err.printf("Enqueued: %s\n", item.toString(estimator));
+            logger.debug("Enqueued: {}", () -> item.toString(estimator));
         }
     }
 
@@ -73,13 +108,12 @@ public class Parser {
 
     public Tree<String> parse() {
         while( ! agenda.isEmpty() ) {
-            System.err.println();
-            System.err.println(agenda);
+            logger.trace("\n{}", () -> agenda);
 
             Item item = agenda.dequeue();
             Item foundGoalItem = null;
 
-            System.err.printf("Dequeued: %s\n", item.toString(estimator));
+            logger.debug("Dequeued: {}", () -> item.toString(estimator));
 
             // TODO - implement combinatory rules other than application
 
@@ -132,7 +166,7 @@ public class Parser {
             }
 
             if( foundGoalItem != null ) {
-                System.err.println("** ENQUEUED GOAL ITEM **");
+                logger.info("** ENQUEUED GOAL ITEM **");
                 return makeParseTree(foundGoalItem);
             }
         }

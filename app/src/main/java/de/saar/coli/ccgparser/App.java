@@ -26,8 +26,16 @@ public class App {
 
         UnaryRules unaryRules = UnaryRules.load(new File("unary_rules.txt"));
 
-        Parser parser = new Parser(allTaggedSentences[0], unaryRules);
-        Tree<String> parseTree = parser.parse();
+        Tree<String> parseTree = null;
+
+        for( int i = 0; i < 1; i++ ) {
+            long start = System.nanoTime();
+            Parser parser = new Parser(allTaggedSentences[0], unaryRules);
+            parseTree = parser.parse();
+            long end = System.nanoTime();
+            System.err.printf("%f us\n", (end-start)/1000.0);
+        }
+
         System.err.println(parseTree);
         parseTree.draw().setVisible(true);
     }
