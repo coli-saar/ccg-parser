@@ -28,12 +28,12 @@ public class App {
 
         Tree<String> parseTree = null;
 
-        for( int i = 0; i < 1; i++ ) {
+        for( int i = 0; i < 10; i++ ) {
             long start = System.nanoTime();
             Parser parser = new Parser(allTaggedSentences[0], unaryRules);
             parseTree = parser.parse();
             long end = System.nanoTime();
-            System.err.printf("%f us\n", (end-start)/1000.0);
+            System.err.printf("%d μs\n", (end-start)/1000);
         }
 
         System.err.println(parseTree);

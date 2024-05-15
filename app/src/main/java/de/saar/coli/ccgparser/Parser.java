@@ -10,10 +10,6 @@ import org.apache.logging.log4j.core.appender.ConsoleAppender;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
-import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import java.util.List;
@@ -25,25 +21,28 @@ public class Parser {
     private int n;
     private UnaryRules unaryRules;
     private WordWithSupertags[] sentence;
-    private static final Logger logger = LogManager.getLogger("Parser");
+    private static final boolean DEBUG = true;
 
-    static {
-        // log only selected messages
-        Configurator.setLevel(logger.getName(), Level.TRACE);
-
-        // clean up the layout of the logger - the crucial part is the PatternLayout
-        LoggerContext context = (LoggerContext) LogManager.getContext(false);
-        Configuration config = context.getConfiguration();
-        PatternLayout layout = PatternLayout.newBuilder().withPattern("[P] %m\n").build();
-        ConsoleAppender appender = ConsoleAppender.newBuilder().setName("Clean").setLayout(layout).setTarget(ConsoleAppender.Target.SYSTEM_ERR).build();
-        appender.start();
-        LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
-        for (Appender oldAppender : loggerConfig.getAppenders().values()) {
-            loggerConfig.removeAppender(oldAppender.getName());
-        }
-        loggerConfig.addAppender(appender, null, null);
-        context.updateLoggers();
-    }
+    // This would be nice, but it adds 30% overhead to the parsing time, so let's not.
+//    private static final Logger logger = LogManager.getLogger("Parser");
+//
+//    static {
+//        // log only selected messages
+//        Configurator.setLevel(logger.getName(), Level.INFO);
+//
+//        // clean up the layout of the logger - the crucial part is the PatternLayout
+//        LoggerContext context = (LoggerContext) LogManager.getContext(false);
+//        Configuration config = context.getConfiguration();
+//        PatternLayout layout = PatternLayout.newBuilder().withPattern("[P] %m\n").build();
+//        ConsoleAppender appender = ConsoleAppender.newBuilder().setName("Clean").setLayout(layout).setTarget(ConsoleAppender.Target.SYSTEM_ERR).build();
+//        appender.start();
+//        LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
+//        for (Appender oldAppender : loggerConfig.getAppenders().values()) {
+//            loggerConfig.removeAppender(oldAppender.getName());
+//        }
+//        loggerConfig.addAppender(appender, null, null);
+//        context.updateLoggers();
+//    }
 
     public Parser(WordWithSupertags[] sentence, UnaryRules unaryRules) {
         n = sentence.length;
@@ -68,11 +67,11 @@ public class Parser {
 
     private void add(Item item) {
         if( chart.contains(item) ) {
-            logger.debug("Already known: {}", () -> item.toString(estimator));
+            if(DEBUG) System.err.printf("Already known: %s\n", item.toString(estimator));
         } else {
             agenda.enqueue(item);
             chart.add(item);
-            logger.debug("Enqueued: {}", () -> item.toString(estimator));
+            if(DEBUG) System.err.printf("Enqueued: %s\n", item.toString(estimator));
         }
     }
 
@@ -108,12 +107,12 @@ public class Parser {
 
     public Tree<String> parse() {
         while( ! agenda.isEmpty() ) {
-            logger.trace("\n{}", () -> agenda);
+            if(DEBUG) System.err.printf("\n%s\n", agenda);
 
             Item item = agenda.dequeue();
             Item foundGoalItem = null;
 
-            logger.debug("Dequeued: {}", () -> item.toString(estimator));
+            if(DEBUG) System.err.printf("Dequeued: %s\n", item.toString(estimator));
 
             // TODO - implement combinatory rules other than application
 
@@ -166,7 +165,7 @@ public class Parser {
             }
 
             if( foundGoalItem != null ) {
-                logger.info("** ENQUEUED GOAL ITEM **");
+                System.err.println("** ENQUEUED GOAL ITEM **");
                 return makeParseTree(foundGoalItem);
             }
         }
