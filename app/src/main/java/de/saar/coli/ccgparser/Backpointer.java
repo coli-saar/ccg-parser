@@ -1,5 +1,7 @@
 package de.saar.coli.ccgparser;
 
+import de.saar.coli.ccgparser.rules.CombinatoryRule;
+
 import java.util.List;
 
 public class Backpointer {

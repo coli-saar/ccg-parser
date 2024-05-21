@@ -55,6 +55,10 @@ public class Category {
         return type;
     }
 
+    public boolean isFunctional() {
+        return type != CategoryType.ATOMIC;
+    }
+
     public String getAtomic() {
         return atomic;
     }

@@ -47,6 +47,11 @@ public class App {
 
                 pw.println(parseTree == null ? "<null>" : parseTree.toString());
                 pb.step();
+
+//                if( parseTree != null ) {
+//                    parseTree.draw().setVisible(true);
+//                    break;
+//                }
             }
         }
 
