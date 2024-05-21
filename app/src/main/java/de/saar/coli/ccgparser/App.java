@@ -4,10 +4,14 @@
 package de.saar.coli.ccgparser;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Joiner;
 import de.up.ling.tree.Tree;
+import me.tongfei.progressbar.ProgressBar;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 public class App {
     public static void main(String[] args) throws IOException {
@@ -26,17 +30,44 @@ public class App {
 
         UnaryRules unaryRules = UnaryRules.load(new File("unary_rules.txt"));
 
-        Tree<String> parseTree = null;
+        int numSentences = 0;
+        int parsedSentences = 0;
+        PrintWriter pw = new PrintWriter(new FileWriter("parses.txt"));
 
-        for( int i = 0; i < 10; i++ ) {
-            long start = System.nanoTime();
-            Parser parser = new Parser(allTaggedSentences[0], unaryRules);
-            parseTree = parser.parse();
-            long end = System.nanoTime();
-            System.err.printf("%d μs\n", (end-start)/1000);
+        try (ProgressBar pb = new ProgressBar("Parsing", allTaggedSentences.length)) {
+            for (WordWithSupertags[] sentence : allTaggedSentences) {
+                System.err.printf("[%04d] %.100s\n", numSentences+1, Joiner.on(" ").join(sentence));
+                Parser parser = new Parser(sentence, unaryRules);
+                Tree<String> parseTree = parser.parse();
+
+                numSentences++;
+                if (parseTree != null) {
+                    parsedSentences++;
+                }
+
+                pw.println(parseTree == null ? "<null>" : parseTree.toString());
+                pb.step();
+            }
         }
 
-        System.err.println(parseTree);
-        parseTree.draw().setVisible(true);
+        pw.close();
+        System.err.printf("Managed to parse %d out of %d sentences (%.1f%%).\n", parsedSentences, numSentences, ((double) parsedSentences * 100)/numSentences);
+
+//
+//
+//        Tree<String> parseTree = null;
+//
+//        for( int i = 0; i < 1; i++ ) {
+//            long start = System.nanoTime();
+//            Parser parser = new Parser(allTaggedSentences[0], unaryRules);
+//            parseTree = parser.parse();
+//            long end = System.nanoTime();
+//            System.err.printf("%d μs\n", (end-start)/1000);
+//        }
+//
+//        System.err.println(parseTree);
+//        if( parseTree != null ) {
+//            parseTree.draw().setVisible(true);
+//        }
     }
 }

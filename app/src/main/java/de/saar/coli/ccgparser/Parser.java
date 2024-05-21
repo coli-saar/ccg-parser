@@ -21,7 +21,7 @@ public class Parser {
     private int n;
     private UnaryRules unaryRules;
     private WordWithSupertags[] sentence;
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     // This would be nice, but it adds 30% overhead to the parsing time, so let's not.
 //    private static final Logger logger = LogManager.getLogger("Parser");
