@@ -6,27 +6,10 @@ import de.saar.coli.ccgparser.Item;
 
 import java.util.List;
 
+// TODO - implement unit tests for everything
 public abstract class CombinatoryRule {
-//    FORWARD_APPLICATION(">", true),
-//    BACKWARD_APPLICATION("<", false),
-//    TYPECHANGE("TC", false)
-//    ;
-//
-//    private String symbol;
-//    private boolean isForward;
-//
-//    CombinatoryRule(String symbol, boolean isForward) {
-//        this.symbol = symbol;
-//        this.isForward = isForward;
-//    }
-//
-//    public String getSymbol() {
-//        return symbol;
-//    }
-//
     public abstract boolean isForward();
     public abstract String getSymbol();
-
     public abstract Item combine(Item functor, Item argument);
 
     protected Item create(int start, int end, Category category, Item functor, Item argument, CombinatoryRule combinatoryRule) {
@@ -34,4 +17,5 @@ public abstract class CombinatoryRule {
         resultItem.addBackpointer(new Backpointer(List.of(functor, argument), combinatoryRule));
         return resultItem;
     }
+
 }

@@ -40,12 +40,28 @@ public class Category {
         return cat;
     }
 
+    public Category compose(Category argument) {
+        if( !isFunctional() || !argument.isFunctional()) {
+            return null;
+        } else {
+            Category cat = new Category();
+            cat.type = argument.type;
+            cat.functor = functor;
+            cat.argument = argument.getArgument();
+            cat.atomic = null;
+            return cat;
+        }
+    }
+
     @Override
     public String toString() {
-        switch(type) {
-            case ATOMIC: return atomic;
-            case FORWARD: return String.format("(%s/%s)", functor.toString(), argument.toString());
-            case BACKWARD: return String.format("(%s\\%s)", functor.toString(), argument.toString());
+        switch (type) {
+            case ATOMIC:
+                return atomic;
+            case FORWARD:
+                return String.format("(%s/%s)", functor.toString(), argument.toString());
+            case BACKWARD:
+                return String.format("(%s\\%s)", functor.toString(), argument.toString());
         }
 
         return null;

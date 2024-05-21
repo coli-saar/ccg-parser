@@ -1,9 +1,6 @@
 package de.saar.coli.ccgparser;
 
-import de.saar.coli.ccgparser.rules.BackwardApplication;
-import de.saar.coli.ccgparser.rules.CombinatoryRule;
-import de.saar.coli.ccgparser.rules.ForwardApplication;
-import de.saar.coli.ccgparser.rules.Typechange;
+import de.saar.coli.ccgparser.rules.*;
 import de.up.ling.tree.Tree;
 
 import java.util.List;
@@ -20,7 +17,11 @@ public class Parser {
     private static final CombinatoryRule TYPECHANGE = new Typechange();
     private static final CombinatoryRule[] COMBINATORY_RULES = new CombinatoryRule[] {
         new ForwardApplication(),
-        new BackwardApplication()
+        new BackwardApplication(),
+        new ForwardHarmonicComposition(),
+        new BackwardHarmonicComposition(),
+        new ForwardCrossedComposition(),
+        new BackwardCrossedComposition()
     };
 
     // This would be nice, but it adds 30% overhead to the parsing time, so let's not.
@@ -114,8 +115,6 @@ public class Parser {
 
             if(DEBUG) System.err.printf("Dequeued: %s\n", item.toString(estimator));
 
-            // TODO - implement combinatory rules other than application
-
             // item acts as functor
             for( CombinatoryRule rule : COMBINATORY_RULES ) {
                 if( rule.isForward() ) {
@@ -137,28 +136,6 @@ public class Parser {
                 }
             }
 
-//
-//
-//            switch( item.getCategory().getType() ) {
-//                case FORWARD:
-//                    for( Item partner : chart.getItemsWithStart(item.getEnd())) {
-//                        if( item.getCategory().getArgument().equals(partner.getCategory())) {
-//                            Item newItem = create(item.getStart(), partner.getEnd(), item.getCategory().getFunctor(), item, partner, CombinatoryRule.FORWARD_APPLICATION);
-//                            foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
-//                        }
-//                    }
-//                    break;
-//
-//                case BACKWARD:
-//                    for( Item partner : chart.getItemsWithEnd(item.getStart())) {
-//                        if( item.getCategory().getArgument().equals(partner.getCategory())) {
-//                            Item newItem = create(partner.getStart(), item.getEnd(), item.getCategory().getFunctor(), item, partner, CombinatoryRule.BACKWARD_APPLICATION);
-//                            foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
-//                        }
-//                    }
-//                    break;
-//            }
-
             // item acts as argument
             for( CombinatoryRule rule : COMBINATORY_RULES ) {
                 if( rule.isForward() ) {
@@ -179,24 +156,6 @@ public class Parser {
                     }
                 }
             }
-
-
-//
-//            for( Item partner : chart.getItemsWithEnd(item.getStart())) {
-//                Category partnerCat = partner.getCategory();
-//                if( partnerCat.getType() == Category.CategoryType.FORWARD && partnerCat.getArgument().equals(item.getCategory())) {
-//                    Item newItem = create(partner.getStart(), item.getEnd(), partnerCat.getFunctor(), partner, item, CombinatoryRule.FORWARD_APPLICATION);
-//                    foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
-//                }
-//            }
-//
-//            for( Item partner : chart.getItemsWithStart(item.getEnd())) {
-//                Category partnerCat = partner.getCategory();
-//                if( partnerCat.getType() == Category.CategoryType.BACKWARD && partnerCat.getArgument().equals(item.getCategory())) {
-//                    Item newItem = create(item.getStart(), partner.getEnd(), partnerCat.getFunctor(), partner, item, CombinatoryRule.BACKWARD_APPLICATION);
-//                    foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
-//                }
-//            }
 
             // process unary type-changing rules
             for( Category changedCategory : unaryRules.get(item.getCategory())) {
