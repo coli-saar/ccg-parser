@@ -1,9 +1,16 @@
 package de.saar.coli.ccgparser;
 
+import com.google.common.base.Joiner;
 import de.saar.coli.ccgparser.rules.*;
 import de.up.ling.tree.Tree;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Parser {
     private Agenda agenda;
@@ -15,37 +22,17 @@ public class Parser {
     private static final boolean DEBUG = false;
 
     private static final CombinatoryRule TYPECHANGE = new Typechange();
-    private static final CombinatoryRule[] COMBINATORY_RULES = new CombinatoryRule[] {
+    public static final CombinatoryRule[] COMBINATORY_RULES = new CombinatoryRule[] {
         new ForwardApplication(),
         new BackwardApplication(),
         new ForwardHarmonicComposition(),
-        new BackwardHarmonicComposition(),
-        new ForwardCrossedComposition(),
-        new BackwardCrossedComposition()
+        new BackwardHarmonicComposition()
+    //        ,
+    //    new ForwardCrossedComposition(),
+    //    new BackwardCrossedComposition()
     };
 
-    // This would be nice, but it adds 30% overhead to the parsing time, so let's not.
-//    private static final Logger logger = LogManager.getLogger("Parser");
-//
-//    static {
-//        // log only selected messages
-//        Configurator.setLevel(logger.getName(), Level.INFO);
-//
-//        // clean up the layout of the logger - the crucial part is the PatternLayout
-//        LoggerContext context = (LoggerContext) LogManager.getContext(false);
-//        Configuration config = context.getConfiguration();
-//        PatternLayout layout = PatternLayout.newBuilder().withPattern("[P] %m\n").build();
-//        ConsoleAppender appender = ConsoleAppender.newBuilder().setName("Clean").setLayout(layout).setTarget(ConsoleAppender.Target.SYSTEM_ERR).build();
-//        appender.start();
-//        LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
-//        for (Appender oldAppender : loggerConfig.getAppenders().values()) {
-//            loggerConfig.removeAppender(oldAppender.getName());
-//        }
-//        loggerConfig.addAppender(appender, null, null);
-//        context.updateLoggers();
-//    }
-
-    public Parser(WordWithSupertags[] sentence, UnaryRules unaryRules) {
+    public Parser(WordWithSupertags[] sentence, UnaryRules unaryRules) throws IOException {
         n = sentence.length;
         estimator = new OutsideEstimator(sentence);
         agenda = new Agenda(estimator);
@@ -107,6 +94,10 @@ public class Parser {
     }
 
     public Tree<String> parse() {
+        SentenceStatistics stats = new SentenceStatistics();
+        stats.length = n;
+        stats.sentence = Joiner.on(" ").join(sentence);
+
         while( ! agenda.isEmpty() ) {
             if(DEBUG) System.err.printf("\n%s\n", agenda);
 
@@ -123,6 +114,7 @@ public class Parser {
                         if( newItem != null ) {
                             add(newItem);
                             foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
+                            stats.ruleCounts.put(rule, stats.ruleCounts.getOrDefault(rule, 0) + 1);
                         }
                     }
                 } else {
@@ -131,6 +123,7 @@ public class Parser {
                         if( newItem != null ) {
                             add(newItem);
                             foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
+                            stats.ruleCounts.put(rule, stats.ruleCounts.getOrDefault(rule, 0) + 1);
                         }
                     }
                 }
@@ -144,6 +137,7 @@ public class Parser {
                         if( newItem != null ) {
                             add(newItem);
                             foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
+                            stats.ruleCounts.put(rule, stats.ruleCounts.getOrDefault(rule, 0) + 1);
                         }
                     }
                 } else {
@@ -152,6 +146,7 @@ public class Parser {
                         if( newItem != null ) {
                             add(newItem);
                             foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
+                            stats.ruleCounts.put(rule, stats.ruleCounts.getOrDefault(rule, 0) + 1);
                         }
                     }
                 }
@@ -168,11 +163,45 @@ public class Parser {
             }
 
             if( foundGoalItem != null ) {
-                System.err.println("** ENQUEUED GOAL ITEM **");
+                // System.err.println("** ENQUEUED GOAL ITEM **");
+
+                stats.couldParse = true;
+                stats.recordEndTime();
+                for( StatisticsListener listener : listeners ) {
+                    listener.accept(stats);
+                }
+
                 return makeParseTree(foundGoalItem);
             }
         }
 
+        stats.couldParse = false;
+        stats.recordEndTime();
+        for( StatisticsListener listener : listeners ) {
+            listener.accept(stats);
+        }
         return null;
+    }
+
+    public static class SentenceStatistics {
+        public Map<CombinatoryRule,Integer> ruleCounts = new HashMap<>();
+        public boolean couldParse = false;
+        public int length = 0;
+        public String sentence = null;
+        public long parsingTimeNano = System.nanoTime();
+
+        public void recordEndTime() {
+            parsingTimeNano = System.nanoTime() - parsingTimeNano;
+        }
+    }
+
+    public static interface StatisticsListener {
+        public void accept(SentenceStatistics stats);
+        public void close();
+    }
+
+    private List<StatisticsListener> listeners = new ArrayList<>();
+    public void addStatisticsListener(StatisticsListener listener) {
+        listeners.add(listener);
     }
 }

@@ -5,6 +5,7 @@ import de.saar.coli.ccgparser.Category;
 import de.saar.coli.ccgparser.Item;
 
 import java.util.List;
+import java.util.Objects;
 
 // TODO - implement unit tests for everything
 public abstract class CombinatoryRule {
@@ -18,4 +19,21 @@ public abstract class CombinatoryRule {
         return resultItem;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CombinatoryRule that = (CombinatoryRule) o;
+        return Objects.equals(getSymbol(), that.getSymbol());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getSymbol());
+    }
+
+    @Override
+    public String toString() {
+        return getSymbol();
+    }
 }

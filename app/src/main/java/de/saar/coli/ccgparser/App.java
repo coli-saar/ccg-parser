@@ -5,6 +5,7 @@ package de.saar.coli.ccgparser;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
+import de.saar.coli.ccgparser.rules.CombinatoryRule;
 import de.up.ling.tree.Tree;
 import me.tongfei.progressbar.ProgressBar;
 
@@ -12,11 +13,44 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Locale;
 
 public class App {
+    private static class PrintingStatisticsListener implements Parser.StatisticsListener  {
+        private PrintWriter pw;
+
+        public PrintingStatisticsListener(String filename) throws IOException {
+            this.pw = new PrintWriter(new FileWriter(filename));
+            pw.printf("Sentence\tLength\tTime (ms)\tParsed");
+            for(CombinatoryRule rule : Parser.COMBINATORY_RULES ) {
+                pw.printf("\t%s", rule.getSymbol());
+            }
+            pw.println();
+        }
+
+        @Override
+        public void accept(Parser.SentenceStatistics stats) {
+            pw.printf(Locale.US, "%s\t%d\t%.2f\t%s", stats.sentence, stats.length, stats.parsingTimeNano/1000000.0, Boolean.toString(stats.couldParse));
+            for(CombinatoryRule rule : Parser.COMBINATORY_RULES ) {
+                pw.printf("\t%d", stats.ruleCounts.get(rule));
+            }
+            pw.println();
+        }
+
+        @Override
+        public void close() {
+            pw.close();
+        }
+    }
+
+    private static final String PARSES_FILENAME = "parses.txt";
+    private static final String STATISTICS_FILENAME = "statistics.tsv";
+
     public static void main(String[] args) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        WordWithSupertags[][] allTaggedSentences = mapper.readValue(new File("ccg-supertagger/supertags.json"), WordWithSupertags[][].class);
+        String supertagsFilename = args[0];
+        System.err.printf("Reading supertags from %s.\n", supertagsFilename);
+        WordWithSupertags[][] allTaggedSentences = mapper.readValue(new File(supertagsFilename), WordWithSupertags[][].class);
 
         // ASSUMPTION - supertags for each word are presented in order of descending score (best first)
         for( WordWithSupertags[] sentence : allTaggedSentences ) {
@@ -32,12 +66,15 @@ public class App {
 
         int numSentences = 0;
         int parsedSentences = 0;
-        PrintWriter pw = new PrintWriter(new FileWriter("parses.txt"));
+        PrintWriter pw = new PrintWriter(new FileWriter(PARSES_FILENAME));
+        Parser.StatisticsListener listener = new PrintingStatisticsListener("statistics.tsv");
+
 
         try (ProgressBar pb = new ProgressBar("Parsing", allTaggedSentences.length)) {
             for (WordWithSupertags[] sentence : allTaggedSentences) {
-                System.err.printf("[%04d] %.100s\n", numSentences+1, Joiner.on(" ").join(sentence));
+//                System.err.printf("[%04d] %.100s\n", numSentences+1, Joiner.on(" ").join(sentence));
                 Parser parser = new Parser(sentence, unaryRules);
+                parser.addStatisticsListener(listener);
                 Tree<String> parseTree = parser.parse();
 
                 numSentences++;
@@ -56,7 +93,10 @@ public class App {
         }
 
         pw.close();
-        System.err.printf("Managed to parse %d out of %d sentences (%.1f%%).\n", parsedSentences, numSentences, ((double) parsedSentences * 100)/numSentences);
+        listener.close();
+
+        System.err.printf("\nManaged to parse %d out of %d sentences (%.1f%%).\n", parsedSentences, numSentences, ((double) parsedSentences * 100)/numSentences);
+        System.err.printf("Parses are in %s, statistics are in %s.\n", PARSES_FILENAME, STATISTICS_FILENAME);
 
 //
 //
