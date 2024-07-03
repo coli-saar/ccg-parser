@@ -4,6 +4,7 @@ import java.util.List;
 
 public class OutsideEstimator {
     private double[] bestSupertagScore;
+    private double[][] precomputedEstimates;
     private int n;
 
     public OutsideEstimator(WordWithSupertags[] sentence) {
@@ -14,10 +15,17 @@ public class OutsideEstimator {
             WordWithSupertags word = sentence[i];
             bestSupertagScore[i] = word.supertags.get(0).score;
         }
+
+        // precompute outside estimates
+        precomputedEstimates = new double[n+1][n+1];
+        for( int start = 0; start <= n; start++) {
+            for( int end = 0; end <= n; end++) {
+                precomputedEstimates[start][end] = computeEstimate(start, end);
+            }
+        }
     }
 
-    // TODO - precompute these
-    public double estimate(int start, int end) {
+    private double computeEstimate(int start, int end) {
         double ret = 0;
 
         for( int i = 0; i < start; i++ ) {
@@ -29,6 +37,11 @@ public class OutsideEstimator {
         }
 
         return ret;
+    }
+
+
+    public double estimate(int start, int end) {
+        return precomputedEstimates[start][end];
     }
 
     public double estimate(Item item) {
