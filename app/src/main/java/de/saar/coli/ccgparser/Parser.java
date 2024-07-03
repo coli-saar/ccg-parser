@@ -4,9 +4,7 @@ import com.google.common.base.Joiner;
 import de.saar.coli.ccgparser.rules.*;
 import de.up.ling.tree.Tree;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +18,7 @@ public class Parser {
     private UnaryRules unaryRules;
     private WordWithSupertags[] sentence;
     private static final boolean DEBUG = false;
+    private static final boolean DEBUG_TO_FILE = false;
 
     private static final CombinatoryRule TYPECHANGE = new Typechange();
     public static final CombinatoryRule[] COMBINATORY_RULES = new CombinatoryRule[] {
@@ -33,6 +32,13 @@ public class Parser {
     };
 
     public Parser(WordWithSupertags[] sentence, UnaryRules unaryRules) throws IOException {
+        if( DEBUG_TO_FILE ) {
+            File file = new File("err.txt");
+            FileOutputStream fos = new FileOutputStream(file);
+            PrintStream ps = new PrintStream(fos);
+            System.setErr(ps);
+        }
+
         n = sentence.length;
         estimator = new OutsideEstimator(sentence);
         agenda = new Agenda(estimator);
@@ -54,13 +60,34 @@ public class Parser {
     }
 
     private void add(Item item) {
-        if( chart.contains(item) ) {
-            if(DEBUG) System.err.printf("Already known: %s\n", item.toString(estimator));
-        } else {
+        Item canonicalItem = chart.getCanonicalItem(item);
+
+        if( canonicalItem == null ) {
+            // no "equals" item was already in the chart => add it
+            if(DEBUG) System.err.printf("Enqueued: %s\n", item.toString(estimator));
             agenda.enqueue(item);
             chart.add(item);
-            if(DEBUG) System.err.printf("Enqueued: %s\n", item.toString(estimator));
+        } else if( item.getScore() > canonicalItem.getScore() ) {
+            // new item is "equals" to a previously discovered item and has better
+            // score => update canonical item and decreaseKey it in the agenda
+            if(DEBUG) System.err.printf("DecreaseKey: %s previously known with score %f\n", item.toString(estimator), canonicalItem.getScore());
+            chart.updateCanonicalItem(item);
+            agenda.decreaseKey(item);
+        } else {
+            // new item was known with a better score => do nothing
+            if(DEBUG) System.err.printf("Already known: %s\n", item.toString(estimator));
         }
+
+//
+//
+//
+//        if( chart.contains(item) ) {
+//            if(DEBUG) System.err.printf("Already known: %s\n", item.toString(estimator));
+//        } else {
+//            agenda.enqueue(item);
+//            chart.add(item);
+//            if(DEBUG) System.err.printf("Enqueued: %s\n", item.toString(estimator));
+//        }
     }
 
     private Item create(int start, int end, Category category, Item functor, Item argument, CombinatoryRule combinatoryRule) {
@@ -98,8 +125,10 @@ public class Parser {
         stats.length = n;
         stats.sentence = Joiner.on(" ").join(sentence);
 
+        if(DEBUG) System.err.printf("\nCHART:\n" + chart + "\n");
+
         while( ! agenda.isEmpty() ) {
-            if(DEBUG) System.err.printf("\n%s\n", agenda);
+            if(DEBUG) System.err.printf("\nAgenda:\n%s\n", agenda);
 
             Item item = agenda.dequeue();
             Item foundGoalItem = null;
@@ -112,6 +141,7 @@ public class Parser {
                     for( Item partner : chart.getItemsWithStart(item.getEnd())) {
                         Item newItem = rule.combine(item, partner);
                         if( newItem != null ) {
+                            if(DEBUG) System.err.printf("[%s] %s <- <%s> / %s\n", rule, newItem, item, partner);
                             add(newItem);
                             foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
                             stats.ruleCounts.put(rule, stats.ruleCounts.getOrDefault(rule, 0) + 1);
@@ -121,6 +151,7 @@ public class Parser {
                     for( Item partner : chart.getItemsWithEnd(item.getStart())) {
                         Item newItem = rule.combine(item, partner);
                         if( newItem != null ) {
+                            if(DEBUG) System.err.printf("[%s] %s <- %s / <%s>\n", rule, newItem, item, partner);
                             add(newItem);
                             foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
                             stats.ruleCounts.put(rule, stats.ruleCounts.getOrDefault(rule, 0) + 1);
@@ -135,6 +166,7 @@ public class Parser {
                     for( Item partner : chart.getItemsWithEnd(item.getStart())) {
                         Item newItem = rule.combine(partner, item);
                         if( newItem != null ) {
+                            if(DEBUG) System.err.printf("[%s] %s <- <%s> \\ %s\n", rule, newItem, item, partner);
                             add(newItem);
                             foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
                             stats.ruleCounts.put(rule, stats.ruleCounts.getOrDefault(rule, 0) + 1);
@@ -144,6 +176,7 @@ public class Parser {
                     for( Item partner : chart.getItemsWithStart(item.getEnd())) {
                         Item newItem = rule.combine(partner, item);
                         if( newItem != null ) {
+                            if(DEBUG) System.err.printf("[%s] %s <- %s \\ <%s>\n", rule, newItem, item, partner);
                             add(newItem);
                             foundGoalItem = isGoalItem(newItem) ? newItem : foundGoalItem;
                             stats.ruleCounts.put(rule, stats.ruleCounts.getOrDefault(rule, 0) + 1);

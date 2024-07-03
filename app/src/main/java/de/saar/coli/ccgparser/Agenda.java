@@ -1,12 +1,11 @@
 package de.saar.coli.ccgparser;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.PriorityQueue;
+import com.codemelon.util.MinHeap;
+
+import java.util.*;
 
 public class Agenda {
-    private PriorityQueue<Item> agenda;
+    private MinHeap<Item> agenda;
     private OutsideEstimator estimator;
 
     private class AgendaComparator implements Comparator<Item> {
@@ -20,11 +19,11 @@ public class Agenda {
     public Agenda(OutsideEstimator estimator) {
         this.estimator = estimator;
         Comparator<Item> agendaComparator = new AgendaComparator();
-        agenda = new PriorityQueue<>(agendaComparator);
+        agenda = new MinHeap<>(agendaComparator);
     }
 
-    public void enqueue(Item item) {
-        agenda.add(item);
+    public boolean enqueue(Item item) {
+        return agenda.add(item);
     }
 
     public Item dequeue() {
@@ -35,22 +34,37 @@ public class Agenda {
         return agenda.isEmpty();
     }
 
-    // This is super slow and should be avoided
+    /**
+     * Replaces a previous instance of this item in the agenda with an
+     * updated instance. This method does not actually check whether
+     * the new item improves over the score of the old item - check
+     * this yourself before calling the method.
+     *
+     * @param item
+     */
+    public void decreaseKey(Item item) {
+        agenda.decreaseKey(item, itit -> itit.setScore(item.getScore()));
+//        agenda.remove(item);
+//        agenda.add(item);
+    }
+
     @Override
     public String toString() {
-        // move items, in order, from agenda to list
-        List<Item> items = new ArrayList<>();
-        while (!agenda.isEmpty()) {
-            items.add(agenda.poll());
-        }
+        // This hack should no longer be needed for the TreeSet.
 
-        // copy them back into the agenda
-        for( Item item : items ) {
-            agenda.offer(item);
-        }
+//        // move items, in order, from agenda to list
+//        List<Item> items = new ArrayList<>();
+//        while (!agenda.isEmpty()) {
+//            items.add(agenda.poll());
+//        }
+//
+//        // copy them back into the agenda
+//        for( Item item : items ) {
+//            agenda.offer(item);
+//        }
 
         StringBuffer buf = new StringBuffer();
-        for( Item item : items ) {
+        for( Item item : agenda ) {
             buf.append(item.toString(estimator));
             buf.append("\n");
         }

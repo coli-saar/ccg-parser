@@ -42,6 +42,10 @@ public class Item {
         return score;
     }
 
+    public void setScore(double score) {
+        this.score = score;
+    }
+
     public String toString(OutsideEstimator estimator) {
         double estimate = estimator.estimate(this);
         return String.format("[%d-%d %s :%d+%d=%d]", start, end, category.toString(), (int) score, (int) estimate, (int) (score + estimate));
@@ -52,16 +56,25 @@ public class Item {
         return String.format("[%d-%d %s]", start, end, category.toString());
     }
 
+    /**
+     * Caveat: Item#equals and Item#hashCode are somewhat hacky: they consider two items
+     * as equal if the start position, end position, and category are the same.
+     * The score is ignored - thus, two items that are the same except for their scores
+     * are considered equal.
+     *
+     * @param o
+     * @return
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Item item = (Item) o;
-        return start == item.start && end == item.end && Double.compare(score, item.score) == 0 && Objects.equals(category, item.category);
+        return start == item.start && end == item.end && Objects.equals(category, item.category);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(start, end, category, score);
+        return Objects.hash(start, end, category);
     }
 }
