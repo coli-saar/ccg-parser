@@ -18,7 +18,11 @@ public class CatParser {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         CategoryParser catparser = new CategoryParser(tokens);
 
-        return visitCategory(catparser.category());
+        try {
+            return visitCategory(catparser.category());
+        } catch(Exception e) {
+            throw new RuntimeException("Error while parsing " + cat, e);
+        }
     }
 
     private Category visitCategory(CategoryParser.CategoryContext category) {
