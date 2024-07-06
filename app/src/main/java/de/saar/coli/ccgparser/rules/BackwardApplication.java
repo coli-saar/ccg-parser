@@ -17,7 +17,7 @@ public class BackwardApplication extends CombinatoryRule {
     @Override
     public Item combine(Item functor, Item argument) {
         Category functorCat = functor.getCategory();
-        if( functorCat.isFunctional() && functorCat.getArgument().equals(argument.getCategory())) {
+        if( functorCat.isFunctional() && functorCat.getType() == Category.CategoryType.BACKWARD && functorCat.getArgument().equals(argument.getCategory())) {
             return create(argument.getStart(), functor.getEnd(), functorCat.getFunctor(), functor, argument, this);
         } else {
             return null;

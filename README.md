@@ -8,3 +8,14 @@ The parser currently uses only application and harmonic compositions of degree o
 
 You can generate supertag scores using the companion project [ccg-supertagger](https://github.com/coli-saar/ccg-supertagger).
 
+## Running the parser
+
+You can call the parser as follows:
+
+```
+java -cp <ccg-parser.jar> de.saar.coli.ccgparser.App <supertags.json> [<output-directory>]
+```
+
+Replace `<ccg-parser.jar>` with the Jar file that you downloaded, and replace `<supertags.json>` with the file that contains the supertag scores.
+
+You can optionally pass an argument `<output-directory>` to specify a directory in which the parser will save images of the derivation trees for the different sentences. The filenames of the image files correspond to the rows in `statistics.tsv`. Note that if a sentence could not be parsed, there will be no image file for it.

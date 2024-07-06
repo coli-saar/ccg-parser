@@ -17,6 +17,7 @@ repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
     maven {url 'https://jitpack.io'}
+    mavenLocal()
 }
 
 dependencies {
@@ -29,7 +30,8 @@ dependencies {
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
 
-    implementation 'com.github.coli-saar:basics:9b78dde236d924e696671b586d7e6eb09309f253'
+    implementation 'com.github.coli-saar:basics:ea1f49bea6' //9b78dde236d924e696671b586d7e6eb09309f253'
+//    implementation 'de.saar.coli:basics:1.2.41-SNAPSHOT'
 
     antlr "org.antlr:antlr4:4.5"
 

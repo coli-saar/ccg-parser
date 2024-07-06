@@ -22,13 +22,12 @@ public class Parser {
 
     private static final CombinatoryRule TYPECHANGE = new Typechange();
     public static final CombinatoryRule[] COMBINATORY_RULES = new CombinatoryRule[] {
-        new ForwardApplication(),
-        new BackwardApplication(),
+        new BackwardCrossedComposition(),
+        new ForwardCrossedComposition(),
+        new BackwardHarmonicComposition(),
         new ForwardHarmonicComposition(),
-        new BackwardHarmonicComposition()
-    //        ,
-    //    new ForwardCrossedComposition(),
-    //    new BackwardCrossedComposition()
+        new BackwardApplication(),
+        new ForwardApplication()
     };
 
     public Parser(WordWithSupertags[] sentence, UnaryRules unaryRules) throws IOException {

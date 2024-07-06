@@ -6,22 +6,32 @@ package de.saar.coli.ccgparser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import de.saar.coli.ccgparser.rules.CombinatoryRule;
+import de.saar.coli.ccgparser.screenimage.ScreenImage;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreePanel;
 import me.tongfei.progressbar.ProgressBar;
 
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Locale;
 
 public class App {
     private static class PrintingStatisticsListener implements Parser.StatisticsListener  {
         private PrintWriter pw;
+        private int numSentences = 0;
 
         public PrintingStatisticsListener(String filename) throws IOException {
             this.pw = new PrintWriter(new FileWriter(filename));
-            pw.printf("Sentence\tLength\tTime (ms)\tParsed");
+            pw.printf("ID\tSentence\tLength\tTime (ms)\tParsed");
             for(CombinatoryRule rule : Parser.COMBINATORY_RULES ) {
                 pw.printf("\t%s", rule.getSymbol());
             }
@@ -30,6 +40,7 @@ public class App {
 
         @Override
         public void accept(Parser.SentenceStatistics stats) {
+            pw.printf("%d\t", numSentences++);
             pw.printf(Locale.US, "%s\t%d\t%.2f\t%s", stats.sentence, stats.length, stats.parsingTimeNano/1000000.0, Boolean.toString(stats.couldParse));
             for(CombinatoryRule rule : Parser.COMBINATORY_RULES ) {
                 pw.printf("\t%d", stats.ruleCounts.get(rule));
@@ -46,9 +57,35 @@ public class App {
     private static final String PARSES_FILENAME = "parses.txt";
     private static final String STATISTICS_FILENAME = "statistics.tsv";
 
+    private static void writeToFile(Tree<String> tree, File file) throws IOException {
+        TreePanel<String> panel = new TreePanel<>(tree);
+
+        // This is a bit weird, but we have to draw the image twice: once to determine
+        // its actual size, and then to actually draw it into an image of that size.
+        BufferedImage image = ScreenImage.createImage(panel);
+        panel.setSize(panel.getPreferredSize());
+        image = ScreenImage.createImage(panel);
+
+        ImageIO.write(image, "png", file);
+    }
+
     public static void main(String[] args) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         String supertagsFilename = args[0];
+        String imageDirectory = args.length > 1 ? args[1] : null;
+
+        if( imageDirectory != null ) {
+            // create directory if needed
+            Path dirPath = Files.createDirectories(Paths.get(imageDirectory));
+
+            // delete all files in the directory
+            for(File file: dirPath.toFile().listFiles()) {
+                if (!file.isDirectory()) {
+                    file.delete();
+                }
+            }
+        }
+
         System.err.printf("Reading supertags from %s.\n", supertagsFilename);
         WordWithSupertags[][] allTaggedSentences = mapper.readValue(new File(supertagsFilename), WordWithSupertags[][].class);
 
@@ -77,6 +114,12 @@ public class App {
                 parser.addStatisticsListener(listener);
                 Tree<String> parseTree = parser.parse();
 
+                if( parseTree != null ) {
+                    if( imageDirectory != null ) {
+                        writeToFile(parseTree, new File(imageDirectory, String.format("tree%04d.png", numSentences)));
+                    }
+                }
+
                 numSentences++;
                 if (parseTree != null) {
                     parsedSentences++;
@@ -84,13 +127,6 @@ public class App {
 
                 pw.println(parseTree == null ? "<null>" : parseTree.toString());
                 pb.step();
-
-//                break;
-
-//                if( parseTree != null ) {
-//                    parseTree.draw().setVisible(true);
-//                    break;
-//                }
             }
         }
 
